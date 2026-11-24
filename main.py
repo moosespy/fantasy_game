@@ -128,7 +128,9 @@ def reset_game():
 level_width, level_height = 1000, 1000
 controls = {'left': py.K_LEFT, 'right': py.K_RIGHT, 'up': py.K_UP, 'down': py.K_DOWN}
 player = Player(250, 250, red, controls)
-e1 = Enemy(500, 500, blue)
+e1_list = []
+for i in range(5):
+    e1_list.append(Enemy(random.randint(0, level_width), random.randint(0, level_height), blue))
 player.x, player.y, scroll_x, scroll_y = reset_game()
 walls = []
 for i in range(5):
@@ -145,7 +147,8 @@ while run:
 
     counter += 1
     player.update()
-    e1.update()
+    for e in e1_list:
+        e.update()
     target_scroll_x = player.rect.x - (width // 2)
     target_scroll_y = player.rect.y - (height // 2)
     scroll_x += (target_scroll_x - scroll_x) // 10
@@ -163,7 +166,8 @@ while run:
     for wall in walls:
         wall.draw(scroll_x, scroll_y)
     player.draw(scroll_x, scroll_y)
-    e1.draw(scroll_x, scroll_y)
+    for e in e1_list:
+        e.draw(scroll_x, scroll_y)
     py.display.update()
 
 py.quit()
