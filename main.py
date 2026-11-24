@@ -18,18 +18,22 @@ def draw_wall(color):
     wall_points = [(0, 0), (0, 50), (50, 50), (50, 0)]
     py.draw.polygon(wall_surf, color, wall_points)
     return wall_surf
-walls = []
 def draw_bg(w, h, c_1):
     bg_surf = py.Surface((1, 2))
     bg_surf.set_at((0, 0), c_1)
     grad_surf = py.transform.smoothscale(bg_surf, (w, h))
     return grad_surf.convert()
-
 def draw_player(color):
     player_surf = py.Surface((18, 18), py.SRCALPHA).convert_alpha()
     player_points = [(9, 0), (18, 9), (9, 18), (0, 9)]
     py.draw.polygon(player_surf, color, player_points)
     return player_surf
+def draw_enemy(color):
+    enemy_surf  =py.Surface((20, 20), py.SRCALPHA).convert_alpha()
+    enemy_points = [(0, 0), (0, 10), (10, 10), (10, 0)]
+    py.draw.polygon(enemy_surf, color, enemy_points)
+    return enemy_surf
+
 class Wall:
     def __init__(self, x, y, color):
         self.x, self.y = float(x), float(y)
@@ -64,15 +68,15 @@ class Player:
         for wall in walls:
             if self.rect.colliderect(wall):
                 if self.vel_x < 0 and self.rect.centerx > wall.rect.right:
+                    self.x -= self.vel_x * dt
                     self.rect.left = wall.rect.right
+                elif self.vel_x > 0 and self.rect.centerx < wall.rect.left:
                     self.x -= self.vel_x * dt
-                if self.vel_x > 0 and self.rect.centerx < wall.rect.left:
                     self.rect.right = wall.rect.left
-                    self.x -= self.vel_x * dt
                 if self.vel_y < 0 and self.rect.centery > wall.rect.bottom:
                     self.rect.top = wall.rect.bottom
                     self.y -= self.vel_y * dt
-                if self.vel_y > 0 and self.rect.centery < wall.rect.top:
+                elif self.vel_y > 0 and self.rect.centery < wall.rect.top:
                     self.rect.bottom = wall.rect.top
                     self.y -= self.vel_y * dt
         self.rect.x = round(self.x)
@@ -80,8 +84,43 @@ class Player:
     def draw(self, scroll_x, scroll_y):
         screen.blit(self.image, (round(self.rect.x - scroll_x), round(self.rect.y - scroll_y)))
 
-        
-
+class Enemy:
+    def __init__(self, x, y, color):
+        self.x, self.y = x, y
+        self.vel_x, self.vel_y = 0, 0
+        self.color = color
+        self.image = draw_enemy(color)
+        self.rect = self.image.get_rect(center = (x, y))
+    def update(self):
+        if self.x < player.rect.centerx:
+            self.vel_x = 1 * 60
+        elif self.x > player.rect.centerx:
+            self.vel_x = -1 * 60
+        if self.y < player.rect.centery:
+            self.vel_y = 1 * 60
+        elif self.y > player.rect.centery:
+            self.vel_y = -1 * 60
+        self.x += self.vel_x * dt
+        self.y += self.vel_y * dt
+        for wall in walls:
+            if self.rect.colliderect(wall):
+                if self.vel_x < 0 and self.rect.centerx > wall.rect.right:
+                    self.x -= self.vel_x * dt
+                    self.rect.left = wall.rect.right
+                elif self.vel_x > 0 and self.rect.centerx < wall.rect.left:
+                    self.x -= self.vel_x * dt
+                    self.rect.right = wall.rect.left
+                if self.vel_y < 0 and self.rect.centery > wall.rect.bottom:
+                    self.y -= self.vel_y * dt
+                    self.rect.top = wall.rect.bottom
+                elif self.vel_y > 0 and self.rect.centery < wall.rect.top:
+                    self.y -= self.vel_y * dt
+                    self.rect.bottom = wall.rect.top
+        self.rect.x = round(self.x)
+        self.rect.y = round(self.y)
+    def draw(self, scroll_x, scroll_y):
+        screen.blit(self.image, (round(self.rect.x - scroll_x), round(self.rect.y - scroll_y)))
+                
 def reset_game():
     x, y, scrollx, scrolly = 250, 250, 0, 0
     return x, y, scrollx, scrolly
@@ -89,6 +128,7 @@ def reset_game():
 level_width, level_height = 1000, 1000
 controls = {'left': py.K_LEFT, 'right': py.K_RIGHT, 'up': py.K_UP, 'down': py.K_DOWN}
 player = Player(250, 250, red, controls)
+e1 = Enemy(500, 500, blue)
 player.x, player.y, scroll_x, scroll_y = reset_game()
 walls = []
 for i in range(5):
@@ -105,6 +145,7 @@ while run:
 
     counter += 1
     player.update()
+    e1.update()
     target_scroll_x = player.rect.x - (width // 2)
     target_scroll_y = player.rect.y - (height // 2)
     scroll_x += (target_scroll_x - scroll_x) // 10
@@ -122,6 +163,7 @@ while run:
     for wall in walls:
         wall.draw(scroll_x, scroll_y)
     player.draw(scroll_x, scroll_y)
+    e1.draw(scroll_x, scroll_y)
     py.display.update()
 
 py.quit()
