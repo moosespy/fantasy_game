@@ -9,7 +9,15 @@ font = py.font.SysFont(None, 35)
 red = [255, 0, 0]
 green = [0, 255, 0]
 blue = [0, 0, 255]
+gray = [128, 128, 128]
 
+def draw_wall(color):
+    wall_surf = py.Surface((10, 10), py.SRCALPHA).convert_alpha()
+    wall_points = [(0, 0), (5, 1), (10, 0), (9, 5), (10, 10), (5, 9), (0, 10), (1, 5)]
+    py.draw.polygon(wall_surf, color, wall_points)
+    return wall_surf
+walls = []
+walls.append(draw_wall(gray))
 def draw_bg(w, h, c_1):
     bg_surf = py.Surface((1, 2))
     bg_surf.set_at((0, 0), c_1)
@@ -50,6 +58,10 @@ class Player:
         self.rect.y = round(self.y)
     def draw(self, scroll_x, scroll_y):
         screen.blit(self.image, (round(self.rect.x - scroll_x), round(self.rect.y - scroll_y)))
+class Wall:
+    def __init__(self, x, y):
+        pass
+        
 
 def reset_game():
     x, y, scrollx, scrolly = 250, 250, 0, 0
@@ -83,6 +95,8 @@ while run:
         scroll_y = level_height
 
     screen.blit(bg, (0, 0))
+    for wall in walls:
+        screen.blit(wall, (250, 250))
     player.draw(scroll_x, scroll_y)
     py.display.update()
 
