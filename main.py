@@ -12,12 +12,11 @@ blue = [0, 0, 255]
 gray = [128, 128, 128]
 
 def draw_wall(color):
-    wall_surf = py.Surface((10, 10), py.SRCALPHA).convert_alpha()
-    wall_points = [(0, 0), (5, 1), (10, 0), (9, 5), (10, 10), (5, 9), (0, 10), (1, 5)]
+    wall_surf = py.Surface((50, 50), py.SRCALPHA).convert_alpha()
+    wall_points = [(0, 0), (0, 50), (50, 50), (50, 0)]
     py.draw.polygon(wall_surf, color, wall_points)
     return wall_surf
 walls = []
-walls.append(draw_wall(gray))
 def draw_bg(w, h, c_1):
     bg_surf = py.Surface((1, 2))
     bg_surf.set_at((0, 0), c_1)
@@ -29,7 +28,13 @@ def draw_player(color):
     player_points = [(9, 0), (18, 9), (9, 18), (0, 9)]
     py.draw.polygon(player_surf, color, player_points)
     return player_surf
-
+class Wall:
+    def __init__(self, x, y, color):
+        self.x, self.y = float(x), float(y)
+        self.image = draw_wall(color)
+        self.rect = self.image.get_rect(center=(x, y))
+    def draw(self, scroll_x, scroll_y):
+        screen.blit(self.image, (round(self.rect.x - scroll_x), round(self.rect.y - scroll_y)))
 class Player:
     def __init__(self, x, y, color, controls):
         self.x, self.y = float(x), float(y)
@@ -58,9 +63,7 @@ class Player:
         self.rect.y = round(self.y)
     def draw(self, scroll_x, scroll_y):
         screen.blit(self.image, (round(self.rect.x - scroll_x), round(self.rect.y - scroll_y)))
-class Wall:
-    def __init__(self, x, y):
-        pass
+
         
 
 def reset_game():
@@ -70,6 +73,8 @@ def reset_game():
 controls = {'left': py.K_LEFT, 'right': py.K_RIGHT, 'up': py.K_UP, 'down': py.K_DOWN}
 player = Player(250, 250, red, controls)
 player.x, player.y, scroll_x, scroll_y = reset_game()
+walls = []
+walls.append(Wall(200, 200, gray))
 bg = draw_bg(width, height, green)
 level_width, level_height = 1000, 1000
 
@@ -96,7 +101,7 @@ while run:
 
     screen.blit(bg, (0, 0))
     for wall in walls:
-        screen.blit(wall, (250, 250))
+        wall.draw(scroll_x, scroll_y)
     player.draw(scroll_x, scroll_y)
     py.display.update()
 
