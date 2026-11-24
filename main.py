@@ -58,8 +58,22 @@ class Player:
     def update(self):
         self.key_input()
         self.x += self.vel_x * dt
-        self.rect.x = round(self.x)
         self.y += self.vel_y * dt
+        for wall in walls:
+            if self.rect.colliderect(wall):
+                if self.vel_x < 0 and self.rect.centerx > wall.rect.right:
+                    self.rect.left = wall.rect.right
+                    self.x -= self.vel_x * dt
+                if self.vel_x > 0 and self.rect.centerx < wall.rect.left:
+                    self.rect.right = wall.rect.left
+                    self.x -= self.vel_x * dt
+                if self.vel_y < 0 and self.rect.centery > wall.rect.bottom:
+                    self.rect.top = wall.rect.bottom
+                    self.y -= self.vel_y * dt
+                if self.vel_y > 0 and self.rect.centery < wall.rect.top:
+                    self.rect.bottom = wall.rect.top
+                    self.y -= self.vel_y * dt
+        self.rect.x = round(self.x)
         self.rect.y = round(self.y)
     def draw(self, scroll_x, scroll_y):
         screen.blit(self.image, (round(self.rect.x - scroll_x), round(self.rect.y - scroll_y)))
@@ -77,6 +91,7 @@ walls = []
 walls.append(Wall(200, 200, gray))
 bg = draw_bg(width, height, green)
 level_width, level_height = 1000, 1000
+counter = 0
 
 run = True
 while run:
@@ -85,6 +100,7 @@ while run:
             run = False
     dt = min(clock.tick(60) / 1000, 0.05)
 
+    counter += 1
     player.update()
     target_scroll_x = player.rect.x - (width // 2)
     target_scroll_y = player.rect.y - (height // 2)
