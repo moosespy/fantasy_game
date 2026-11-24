@@ -1,4 +1,6 @@
 import pygame as py
+import random
+import sys
 py.init()
 width = 500
 height = 500
@@ -84,13 +86,14 @@ def reset_game():
     x, y, scrollx, scrolly = 250, 250, 0, 0
     return x, y, scrollx, scrolly
 
+level_width, level_height = 1000, 1000
 controls = {'left': py.K_LEFT, 'right': py.K_RIGHT, 'up': py.K_UP, 'down': py.K_DOWN}
 player = Player(250, 250, red, controls)
 player.x, player.y, scroll_x, scroll_y = reset_game()
 walls = []
-walls.append(Wall(200, 200, gray))
+for i in range(5):
+    walls.append(Wall(random.randint(0, level_width), random.randint(0, level_height), gray))
 bg = draw_bg(width, height, green)
-level_width, level_height = 1000, 1000
 counter = 0
 
 run = True
