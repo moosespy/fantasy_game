@@ -18,9 +18,10 @@ def draw_wall(color):
     wall_points = [(0, 0), (0, 50), (50, 50), (50, 0)]
     py.draw.polygon(wall_surf, color, wall_points)
     return wall_surf
-def draw_bg(w, h, c_1):
+def draw_bg(w, h, c_1, c_2):
     bg_surf = py.Surface((1, 2))
     bg_surf.set_at((0, 0), c_1)
+    bg_surf.set_at((0, 1), c_2)
     grad_surf = py.transform.smoothscale(bg_surf, (w, h))
     return grad_surf.convert()
 def draw_player(color):
@@ -140,7 +141,7 @@ class Projectile:
             self.vel_y = self.speed * 60
         elif player.vel_y < 0:
             self.vel_y = self.speed * -60
-        elif player.vel_x == 0:
+        if player.vel_x == 0 and player.vel_y == 0:
             self.vel_x = self.speed * 60
         self.color = color
         self.image_right = draw_projectile(color)
@@ -172,7 +173,7 @@ walls = []
 for i in range(5):
     walls.append(Wall(random.randint(0, level_width), random.randint(0, level_height), gray))
 player_proj = []
-bg = draw_bg(width, height, green)
+bg = draw_bg(width, height, green, green)
 counter = 0
 
 run = True
@@ -193,6 +194,10 @@ while run:
         player_proj = [p for p in player_proj if p.update() == True]
         for e in e1_list:
             e.update()
+            for p in player_proj:
+                if e.rect.colliderect(p):
+                    e1_list.remove(e)
+                    player_proj.remove(p)
         target_scroll_x = player.rect.x - (width // 2)
         target_scroll_y = player.rect.y - (height // 2)
         scroll_x += (target_scroll_x - scroll_x) // 10
