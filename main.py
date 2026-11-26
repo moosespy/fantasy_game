@@ -195,6 +195,7 @@ for i in range(5):
 player_proj = []
 bg = draw_bg(width, height, green, green)
 counter = 0
+shot_count = -5
 
 run = True
 while run:
@@ -203,8 +204,9 @@ while run:
             run = False
         if event.type == py.KEYDOWN:
             keys = py.key.get_pressed()
-            if keys[player.controls['shoot']]:
+            if keys[player.controls['shoot']] and gamestate == 'playing' and counter - shot_count >= 15:
                 player_proj.append(Projectile(player.rect.centerx, player.rect.centery, player.color))
+                shot_count = counter
 
     dt = min(clock.tick(60) / 1000, 0.05)
 
