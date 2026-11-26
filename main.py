@@ -51,7 +51,7 @@ class Player:
         self.x, self.y = float(x), float(y)
         self.vel_x, self.vel_y = 0, 0
         self.color = color
-        self.speed = 1
+        self.speed = 1.5
         self.controls = controls
         self.image = draw_player(self.color)
         self.rect = self.image.get_rect(center=(x, y))
@@ -95,7 +95,7 @@ class Enemy:
         self.x, self.y = x, y
         self.vel_x, self.vel_y = 0, 0
         self.color = color
-        self.speed = random.uniform(1, 1.5)
+        self.speed = random.uniform(1, 2)
         self.image = draw_enemy(color)
         self.rect = self.image.get_rect(center = (x, y))
     def update(self):
@@ -145,8 +145,11 @@ class Projectile:
             self.vel_x = self.speed * 60
         self.color = color
         self.image_right = draw_projectile(color)
-        self.image_left = py.transform.flip(self.image_right, True, False)
+        self.image_left = py.transform.rotate(self.image_right, 180)
+        self.image_down = py.transform.rotate(self.image_right, 270)
+        self.image_up = py.transform.rotate(self.image_right, 90)
         self.rect = self.image_right.get_rect(center = (x, y))
+        image = self.image_right
     def update(self):
         self.x += self.vel_x * dt
         self.y += self.vel_y * dt
@@ -157,7 +160,21 @@ class Projectile:
         self.rect.y = round(self.y)
         return True
     def draw(self, scroll_x, scroll_y):
-        screen.blit(self.image_right if self.vel_x >= 0 else self.image_left, (round(self.rect.x - scroll_x), round(self.rect.y - scroll_y)))
+        image = self.image_right
+        if self.vel_x > 0:
+            if self.vel_y == 0:
+                image = self.image_right
+        elif self.vel_x < 0:
+            if self.vel_y == 0:
+                image = self.image_left
+        elif self.vel_x == 0:
+            if self.vel_y < 0:
+                image = self.image_up
+            elif self.vel_y > 0:
+                image = self.image_down
+            else:
+                image = self.image_right
+        screen.blit(image, (round(self.rect.x - scroll_x), round(self.rect.y - scroll_y)))
 def reset_game():
     x, y, scrollx, scrolly, gamestate = 250, 250, 0, 0, 'playing'
     return x, y, scrollx, scrolly, gamestate
@@ -194,10 +211,11 @@ while run:
         player_proj = [p for p in player_proj if p.update() == True]
         for e in e1_list:
             e.update()
-            for p in player_proj:
+            for p in player_proj[:]:
                 if e.rect.colliderect(p):
                     e1_list.remove(e)
                     player_proj.remove(p)
+                    e1_list.append(Enemy(0, 0, blue))
         target_scroll_x = player.rect.x - (width // 2)
         target_scroll_y = player.rect.y - (height // 2)
         scroll_x += (target_scroll_x - scroll_x) // 10
@@ -223,7 +241,7 @@ while run:
     for e in e1_list:
         e.draw(scroll_x, scroll_y)
     for p in player_proj:
-        p.draw(scroll_y, scroll_y)
+        p.draw(scroll_x, scroll_y)
     py.display.update()
 
 py.quit()
