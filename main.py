@@ -35,8 +35,8 @@ def draw_enemy(color):
     py.draw.polygon(enemy_surf, color, enemy_points)
     return enemy_surf
 def draw_projectile(color):
-    p_surf = py.Surface((40, 10), py.SRCALPHA).convert_alpha()
-    p_points = [(0, 3), (0, 7), (35, 7), (35, 10), (40, 5), (35, 0), (35, 3)]
+    p_surf = py.Surface((30, 10), py.SRCALPHA).convert_alpha()
+    p_points = [(0, 3), (0, 7), (25, 7), (25, 10), (30, 5), (25, 0), (25, 3)]
     py.draw.polygon(p_surf, color, p_points)
     return p_surf
 class Wall:
