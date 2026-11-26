@@ -39,6 +39,11 @@ def draw_projectile(color):
     p_points = [(0, 3), (0, 7), (25, 7), (25, 10), (30, 5), (25, 0), (25, 3)]
     py.draw.polygon(p_surf, color, p_points)
     return p_surf
+def draw_particle(color):
+    p_surf = py.Surface((4, 4), py.SRCALPHA).convert_alpha()
+    p_points = [(0, 2), (2, 0), (4, 2), (2, 4)]
+    py.draw.polygon(p_surf, color, p_points)
+    return p_surf
 class Wall:
     def __init__(self, x, y, color):
         self.x, self.y = float(x), float(y)
@@ -183,18 +188,41 @@ class Projectile:
                 image = self.image_right
         self.mask = py.mask.from_surface(image)
         screen.blit(image, (round(self.rect.x - scroll_x), round(self.rect.y - scroll_y)))
+class Particle:
+    def __init__(self, center_x, center_y, color):
+        self.x = float(center_x)
+        self.y = float(center_y)
+        self.size = random.randint(5, 10)
+        self.vel_x = random.uniform(-100, 100)
+        self.vel_y = random.uniform(-100, 100)
+        self.shrink_rate = random.uniform(6, 12)
+        self.image = draw_particle(color)
+    def update(self, dt):
+        self.x += self.vel_x * dt
+        self.y += self.vel_y * dt
+        self.size -= self.shrink_rate * dt
+    def draw(self, scroll_x, scroll_y):
+        if self.size > 0:
+            screen.blit(self.image, (round(self.x - scroll_x), round(self.y - scroll_y)))
+
+def explode(x, y, color):
+    particles = []
+    for _ in range(25):
+        particles.append(Particle(x, y, color))
+    return particles
+
 def reset_game():
     x, y, scrollx, scrolly, gamestate = 250, 250, 0, 0, 'playing'
-    e1_list = []
+    e1_list, player_proj = [], []
     for i in range(15):
         spawn_e1 = random.randint(1, 2)
         e1_list.append(Enemy(random.randint(0, level_width), 0 if spawn_e1 == 1 else level_height, blue))
-    return x, y, scrollx, scrolly, gamestate, e1_list
+    return x, y, scrollx, scrolly, gamestate, e1_list, player_proj
 
 level_width, level_height = 1000, 1000
 controls = {'left': py.K_LEFT, 'right': py.K_RIGHT, 'up': py.K_UP, 'down': py.K_DOWN, 'shoot': py.K_SPACE}
 player = Player(250, 250, red, controls)
-player.x, player.y, scroll_x, scroll_y, gamestate, e1_list = reset_game()
+player.x, player.y, scroll_x, scroll_y, gamestate, e1_list, player_proj = reset_game()
 walls = []
 for i in range(15):
     walls.append(Wall(random.randint(0, level_width), random.randint(0, level_height), gray))
@@ -206,6 +234,7 @@ player_proj = []
 bg = draw_bg(width, height, green, green)
 counter = 0
 shot_count = -5
+particles = []
 
 run = True
 while run:
@@ -250,16 +279,23 @@ while run:
         for e in e1_list:
             if player.rect.colliderect(e):
                 gamestate = 'lose'
+                particles = explode(player.rect.centerx, player.rect.centery, player.color)
     if gamestate == 'lose':
         if keys[py.K_r]:
-            player.x, player.y, scroll_x, scroll_y, gamestate, e1_list = reset_game()
+            player.x, player.y, scroll_x, scroll_y, gamestate, e1_list, player_proj = reset_game()
+        for p in particles:
+            p.update(dt)
+        particles = [p for p in particles if p.size > 0]
     screen.blit(bg, (0, 0))
     for wall in walls:
         wall.draw(scroll_x, scroll_y)
-    player.draw(scroll_x, scroll_y)
+    if gamestate == 'playing':
+        player.draw(scroll_x, scroll_y)
     for e in e1_list:
         e.draw(scroll_x, scroll_y)
     for p in player_proj:
+        p.draw(scroll_x, scroll_y)
+    for p in particles:
         p.draw(scroll_x, scroll_y)
     py.display.update()
 
