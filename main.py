@@ -44,6 +44,7 @@ class Wall:
         self.x, self.y = float(x), float(y)
         self.image = draw_wall(color)
         self.rect = self.image.get_rect(center=(x, y))
+        self.mask = py.mask.from_surface(self.image)
     def draw(self, scroll_x, scroll_y):
         screen.blit(self.image, (round(self.rect.x - scroll_x), round(self.rect.y - scroll_y)))
 class Player:
@@ -153,11 +154,14 @@ class Projectile:
         self.image_up = py.transform.rotate(self.image_right, 90)
         self.rect = self.image_right.get_rect(center = (x, y))
         image = self.image_right
+        self.mask = py.mask.from_surface(image)
     def update(self):
         self.x += self.vel_x * dt
         self.y += self.vel_y * dt
         for wall in walls:
-            if self.rect.colliderect(wall):
+            offset_x = wall.rect.x - self.rect.x
+            offset_y = wall.rect.y - self.rect.y
+            if self.mask.overlap(wall.mask, (offset_x, offset_y)):
                 return False
         self.rect.x = round(self.x)
         self.rect.y = round(self.y)
@@ -177,6 +181,7 @@ class Projectile:
                 image = self.image_down
             else:
                 image = self.image_right
+        self.mask = py.mask.from_surface(image)
         screen.blit(image, (round(self.rect.x - scroll_x), round(self.rect.y - scroll_y)))
 def reset_game():
     x, y, scrollx, scrolly, gamestate = 250, 250, 0, 0, 'playing'
@@ -187,11 +192,16 @@ controls = {'left': py.K_LEFT, 'right': py.K_RIGHT, 'up': py.K_UP, 'down': py.K_
 player = Player(250, 250, red, controls)
 e1_list = []
 for i in range(5):
-    e1_list.append(Enemy(random.randint(0, level_width), random.randint(0, level_height), blue))
+    spawn_e1 = random.randint(1, 2)
+    e1_list.append(Enemy(random.randint(0, level_width), 0 if spawn_e1 == 1 else level_height, blue))
 player.x, player.y, scroll_x, scroll_y, gamestate = reset_game()
 walls = []
-for i in range(5):
+for i in range(10):
     walls.append(Wall(random.randint(0, level_width), random.randint(0, level_height), gray))
+for wall in walls:
+    if wall.rect.colliderect(player):
+        wall.x += 50
+        wall.y += 50
 player_proj = []
 bg = draw_bg(width, height, green, green)
 counter = 0
@@ -222,7 +232,8 @@ while run:
                         e1_list.remove(e)
                     if p in player_proj:
                         player_proj.remove(p)
-                    e1_list.append(Enemy(0, 0, blue))
+                    spawn_e1 = random.randint(1, 2)
+                    e1_list.append(Enemy(random.randint(0, level_width), (0 if spawn_e1 == 1 else level_height), blue))
                     break
         target_scroll_x = player.rect.x - (width // 2)
         target_scroll_y = player.rect.y - (height // 2)
