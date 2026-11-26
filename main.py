@@ -158,13 +158,13 @@ class Projectile:
     def update(self):
         self.x += self.vel_x * dt
         self.y += self.vel_y * dt
+        self.rect.x = round(self.x)
+        self.rect.y = round(self.y)
         for wall in walls:
             offset_x = wall.rect.x - self.rect.x
             offset_y = wall.rect.y - self.rect.y
             if self.mask.overlap(wall.mask, (offset_x, offset_y)):
                 return False
-        self.rect.x = round(self.x)
-        self.rect.y = round(self.y)
         return True
     def draw(self, scroll_x, scroll_y):
         image = self.image_right
@@ -185,18 +185,18 @@ class Projectile:
         screen.blit(image, (round(self.rect.x - scroll_x), round(self.rect.y - scroll_y)))
 def reset_game():
     x, y, scrollx, scrolly, gamestate = 250, 250, 0, 0, 'playing'
-    return x, y, scrollx, scrolly, gamestate
+    e1_list = []
+    for i in range(15):
+        spawn_e1 = random.randint(1, 2)
+        e1_list.append(Enemy(random.randint(0, level_width), 0 if spawn_e1 == 1 else level_height, blue))
+    return x, y, scrollx, scrolly, gamestate, e1_list
 
 level_width, level_height = 1000, 1000
 controls = {'left': py.K_LEFT, 'right': py.K_RIGHT, 'up': py.K_UP, 'down': py.K_DOWN, 'shoot': py.K_SPACE}
 player = Player(250, 250, red, controls)
-e1_list = []
-for i in range(5):
-    spawn_e1 = random.randint(1, 2)
-    e1_list.append(Enemy(random.randint(0, level_width), 0 if spawn_e1 == 1 else level_height, blue))
-player.x, player.y, scroll_x, scroll_y, gamestate = reset_game()
+player.x, player.y, scroll_x, scroll_y, gamestate, e1_list = reset_game()
 walls = []
-for i in range(10):
+for i in range(15):
     walls.append(Wall(random.randint(0, level_width), random.randint(0, level_height), gray))
 for wall in walls:
     if wall.rect.colliderect(player):
@@ -209,11 +209,11 @@ shot_count = -5
 
 run = True
 while run:
+    keys = py.key.get_pressed()
     for event in py.event.get():
         if event.type == py.QUIT:
             run = False
         if event.type == py.KEYDOWN:
-            keys = py.key.get_pressed()
             if keys[player.controls['shoot']] and gamestate == 'playing' and counter - shot_count >= 15:
                 player_proj.append(Projectile(player.rect.centerx, player.rect.centery, player.color))
                 shot_count = counter
@@ -251,8 +251,8 @@ while run:
             if player.rect.colliderect(e):
                 gamestate = 'lose'
     if gamestate == 'lose':
-        run = False
-
+        if keys[py.K_r]:
+            player.x, player.y, scroll_x, scroll_y, gamestate, e1_list = reset_game()
     screen.blit(bg, (0, 0))
     for wall in walls:
         wall.draw(scroll_x, scroll_y)
