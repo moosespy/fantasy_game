@@ -51,6 +51,7 @@ class Player:
         self.x, self.y = float(x), float(y)
         self.vel_x, self.vel_y = 0, 0
         self.color = color
+        self.direction = 1
         self.speed = 1.5
         self.controls = controls
         self.image = draw_player(self.color)
@@ -60,12 +61,16 @@ class Player:
         self.vel_x = 0
         self.vel_y = 0
         if keys[self.controls['left']]:
+            self.direction = -1
             self.vel_x = -1 * self.speed * 60
         if keys[self.controls['right']]:
+            self.direction = 1
             self.vel_x = self.speed * 60
         if keys[self.controls['up']]:
+            self.direction = -2
             self.vel_y = -1 * self.speed * 60
         if keys[self.controls['down']]:
+            self.direction = 2
             self.vel_y = self.speed * 60
     def update(self):
         self.key_input()
@@ -131,18 +136,16 @@ class Enemy:
 class Projectile:
     def __init__(self, x, y, color):
         self.x, self.y = x, y
-        self.speed = 5
+        self.speed = 5 * 60
         self.vel_y, self.vel_x = 0, 0
-        if player.vel_x > 0:
-            self.vel_x = self.speed * 60
-        elif player.vel_x < 0:
-            self.vel_x = self.speed * -60
-        if player.vel_y > 0:
-            self.vel_y = self.speed * 60
-        elif player.vel_y < 0:
-            self.vel_y = self.speed * -60
-        if player.vel_x == 0 and player.vel_y == 0:
-            self.vel_x = self.speed * 60
+        if player.direction == 1:
+            self.vel_x = self.speed
+        elif player.direction == -1:
+            self.vel_x = self.speed * -1
+        if player.direction == -2:
+            self.vel_y = self.speed * -1
+        elif player.direction == 2:
+            self.vel_y = self.speed
         self.color = color
         self.image_right = draw_projectile(color)
         self.image_left = py.transform.rotate(self.image_right, 180)
@@ -196,7 +199,7 @@ counter = 0
 run = True
 while run:
     for event in py.event.get():
-        if event == py.QUIT:
+        if event.type == py.QUIT:
             run = False
         if event.type == py.KEYDOWN:
             keys = py.key.get_pressed()
@@ -209,13 +212,16 @@ while run:
         counter += 1
         player.update()
         player_proj = [p for p in player_proj if p.update() == True]
-        for e in e1_list:
+        for e in e1_list[:]:
             e.update()
             for p in player_proj[:]:
                 if e.rect.colliderect(p):
-                    e1_list.remove(e)
-                    player_proj.remove(p)
+                    if e in e1_list:
+                        e1_list.remove(e)
+                    if p in player_proj:
+                        player_proj.remove(p)
                     e1_list.append(Enemy(0, 0, blue))
+                    break
         target_scroll_x = player.rect.x - (width // 2)
         target_scroll_y = player.rect.y - (height // 2)
         scroll_x += (target_scroll_x - scroll_x) // 10
