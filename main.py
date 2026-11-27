@@ -102,7 +102,6 @@ class Player:
         self.rect.y = round(self.y)
     def draw(self, scroll_x, scroll_y):
         screen.blit(self.image, (round(self.rect.x - scroll_x), round(self.rect.y - scroll_y)))
-
 class Enemy:
     def __init__(self, x, y, color):
         self.x, self.y = x, y
@@ -111,6 +110,7 @@ class Enemy:
         self.speed = random.uniform(1, 2)
         self.image = draw_enemy(color)
         self.rect = self.image.get_rect(center = (x, y))
+        self.mask = py.mask.from_surface(self.image)
     def update(self):
         if self.x < player.rect.centerx:
             self.vel_x = self.speed * 60
@@ -123,19 +123,21 @@ class Enemy:
         self.x += self.vel_x * dt
         self.y += self.vel_y * dt
         for wall in walls:
-            if self.rect.colliderect(wall):
+            offset_x = wall.rect.x - self.rect.x
+            offset_y = wall.rect.y - self.rect.y
+            if self.mask.overlap(wall.mask, (offset_x, offset_y)):
                 if self.vel_x < 0 and self.rect.centerx > wall.rect.right:
-                    self.x -= self.vel_x * dt
                     self.rect.left = wall.rect.right
+                    self.x = self.rect.x
                 elif self.vel_x > 0 and self.rect.centerx < wall.rect.left:
-                    self.x -= self.vel_x * dt
                     self.rect.right = wall.rect.left
+                    self.x = self.rect.x
                 if self.vel_y < 0 and self.rect.centery > wall.rect.bottom:
-                    self.y -= self.vel_y * dt
                     self.rect.top = wall.rect.bottom
+                    self.y = self.rect.y
                 elif self.vel_y > 0 and self.rect.centery < wall.rect.top:
-                    self.y -= self.vel_y * dt
                     self.rect.bottom = wall.rect.top
+                    self.y = self.rect.y
         self.rect.x = round(self.x)
         self.rect.y = round(self.y)
     def draw(self, scroll_x, scroll_y):
@@ -259,7 +261,9 @@ while run:
         for e in e1_list[:]:
             e.update()
             for p in player_proj[:]:
-                if e.rect.colliderect(p):
+                offset_x = p.rect.x - e.rect.x
+                offset_y = p.rect.y - e.rect.y
+                if e.mask.overlap(p.mask, (offset_x, offset_y)):
                     if e in e1_list:
                         e1_list.remove(e)
                     if p in player_proj:
