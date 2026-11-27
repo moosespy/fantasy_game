@@ -12,6 +12,8 @@ red = [255, 0, 0]
 green = [0, 255, 0]
 blue = [0, 0, 255]
 gray = [128, 128, 128]
+black = [0, 0, 0]
+white = [255, 255, 255]
 
 def draw_wall(color):
     wall_surf = py.Surface((50, 50), py.SRCALPHA).convert_alpha()
@@ -212,21 +214,21 @@ def explode(x, y, color):
     return particles
 
 def reset_game():
-    x, y, scrollx, scrolly, gamestate = 250, 250, 0, 0, 'playing'
+    x, y, scrollx, scrolly, gamestate, score = 250, 250, 0, 0, 'playing', 0
     e1_list = []
     player_proj = []
     for i in range(15):
         spawn_e1 = random.randint(1, 2)
         e1_list.append(Enemy(random.randint(0, level_width), 0 if spawn_e1 == 1 else level_height, blue))
-    return x, y, scrollx, scrolly, gamestate, e1_list, player_proj
+    return x, y, scrollx, scrolly, gamestate, score, e1_list, player_proj
 
 level_width, level_height = 1000, 1000
 controls = {'left': py.K_LEFT, 'right': py.K_RIGHT, 'up': py.K_UP, 'down': py.K_DOWN, 'shoot': py.K_SPACE}
 player = Player(250, 250, red, controls)
-player.x, player.y, scroll_x, scroll_y, gamestate, e1_list, player_proj = reset_game()
+player.x, player.y, scroll_x, scroll_y, gamestate, score, e1_list, player_proj = reset_game()
 walls = []
 for i in range(15):
-    walls.append(Wall(random.randint(0, level_width), random.randint(0, level_height), gray))
+    walls.append(Wall((level_width/15 * i + random.randint(0, round(level_width/15))), random.randint(0, level_height), gray))
 for wall in walls:
     if wall.rect.colliderect(player):
         wall.x += 50
@@ -250,10 +252,10 @@ while run:
 
     dt = min(clock.tick(60) / 1000, 0.05)
 
+    player_proj = [p for p in player_proj if p.update() == True]
     if gamestate == 'playing':
         counter += 1
         player.update()
-        player_proj = [p for p in player_proj if p.update() == True]
         for e in e1_list[:]:
             e.update()
             for p in player_proj[:]:
@@ -262,6 +264,7 @@ while run:
                         e1_list.remove(e)
                     if p in player_proj:
                         player_proj.remove(p)
+                    score += 1
                     particles.extend(explode(e.rect.centerx, e.rect.centery, e.color))
                     spawn_e1 = random.randint(1, 2)
                     e1_list.append(Enemy(random.randint(0, level_width), (0 if spawn_e1 == 1 else level_height), blue))
@@ -282,9 +285,11 @@ while run:
             if player.rect.colliderect(e):
                 gamestate = 'lose'
                 particles.extend(explode(player.rect.centerx, player.rect.centery, player.color))
+        text = font.render(f"Score: {score}", True, black)
     if gamestate == 'lose':
         if keys[py.K_r]:
-            player.x, player.y, scroll_x, scroll_y, gamestate, e1_list, player_proj = reset_game()
+            player.x, player.y, scroll_x, scroll_y, gamestate, score, e1_list, player_proj = reset_game()
+        text = font.render(f"Game over. Score: {score}", True, black)
     for p in particles:
         p.update(dt)
     particles = [p for p in particles if p.size > 0]
@@ -299,6 +304,7 @@ while run:
         p.draw(scroll_x, scroll_y)
     for p in particles:
         p.draw(scroll_x, scroll_y)
+    screen.blit(text, (10, 10))
     py.display.update()
 
 py.quit()
