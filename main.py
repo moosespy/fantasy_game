@@ -64,6 +64,7 @@ class Player:
         self.controls = controls
         self.image = draw_player(self.color)
         self.rect = self.image.get_rect(center=(x, y))
+        self.mask = py.mask.from_surface(self.image)
     def key_input(self):
         keys = py.key.get_pressed()
         self.vel_x = 0
@@ -286,7 +287,9 @@ while run:
         if scroll_y > level_height:
             scroll_y = level_height
         for e in e1_list:
-            if player.rect.colliderect(e):
+            offset_x = e.rect.x - player.rect.x
+            offset_y = e.rect.y - player.rect.y
+            if player.mask.overlap(e.mask, (offset_x, offset_y)):
                 gamestate = 'lose'
                 particles.extend(explode(player.rect.centerx, player.rect.centery, player.color))
         text = font.render(f"Score: {score}", True, black)
