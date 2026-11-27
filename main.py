@@ -213,7 +213,8 @@ def explode(x, y, color):
 
 def reset_game():
     x, y, scrollx, scrolly, gamestate = 250, 250, 0, 0, 'playing'
-    e1_list, player_proj = [], []
+    e1_list = []
+    player_proj = []
     for i in range(15):
         spawn_e1 = random.randint(1, 2)
         e1_list.append(Enemy(random.randint(0, level_width), 0 if spawn_e1 == 1 else level_height, blue))
@@ -261,6 +262,7 @@ while run:
                         e1_list.remove(e)
                     if p in player_proj:
                         player_proj.remove(p)
+                    particles.extend(explode(e.rect.centerx, e.rect.centery, e.color))
                     spawn_e1 = random.randint(1, 2)
                     e1_list.append(Enemy(random.randint(0, level_width), (0 if spawn_e1 == 1 else level_height), blue))
                     break
@@ -279,13 +281,13 @@ while run:
         for e in e1_list:
             if player.rect.colliderect(e):
                 gamestate = 'lose'
-                particles = explode(player.rect.centerx, player.rect.centery, player.color)
+                particles.extend(explode(player.rect.centerx, player.rect.centery, player.color))
     if gamestate == 'lose':
         if keys[py.K_r]:
             player.x, player.y, scroll_x, scroll_y, gamestate, e1_list, player_proj = reset_game()
-        for p in particles:
-            p.update(dt)
-        particles = [p for p in particles if p.size > 0]
+    for p in particles:
+        p.update(dt)
+    particles = [p for p in particles if p.size > 0]
     screen.blit(bg, (0, 0))
     for wall in walls:
         wall.draw(scroll_x, scroll_y)
