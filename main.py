@@ -3,8 +3,8 @@ import random
 import sys
 import time
 py.init()
-width = 500
-height = 500
+width = 400
+height = 600
 screen = py.display.set_mode((width, height))
 clock = py.time.Clock()
 font = py.font.SysFont(None, 35)
@@ -235,12 +235,12 @@ def explode(x, y, color):
     return particles
 
 def reset_game():
-    x, y, scrollx, scrolly, gamestate, score = 250, 250, 0, 0, 'playing', 0
+    x, y, scrollx, scrolly, gamestate, score = 100, level_height/2, 0, 0, 'playing', 0
     e1_list = []
     player_proj = []
     for i in range(15):
         spawn_e1 = random.randint(1, 2)
-        e1_list.append(Enemy(random.randint(0, level_width), 0 if spawn_e1 == 1 else level_height, blue))
+        e1_list.append(Enemy(random.randint(0, level_width + width), 0 if spawn_e1 == 1 else level_height + width, blue))
     return x, y, scrollx, scrolly, gamestate, score, e1_list, player_proj
 
 level_width, level_height = 1000, 1000
@@ -248,9 +248,10 @@ controls = {'left': py.K_LEFT, 'right': py.K_RIGHT, 'up': py.K_UP, 'down': py.K_
 player = Player(250, 250, red, controls)
 player.x, player.y, scroll_x, scroll_y, gamestate, score, e1_list, player_proj = reset_game()
 walls = []
-for i in range(15):
-    walls.append(Wall((level_width/15 * i + random.randint(0, round(level_width/15))), random.randint(0, level_height), gray))
-for wall in walls:
+wall_count = 75
+for i in range(wall_count):
+    walls.append(Wall(((level_width + (width))/wall_count * i + random.randint(0, round((level_width+(width))/wall_count))), random.randint(0, (level_height+width)), gray))
+for wall in walls[:]:
     if wall.rect.colliderect(player):
         wall.x += 50
         wall.y += 50
