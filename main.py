@@ -1,6 +1,7 @@
 import pygame as py
 import random
 import sys
+import time
 py.init()
 width = 500
 height = 500
@@ -69,18 +70,34 @@ class Player:
         keys = py.key.get_pressed()
         self.vel_x = 0
         self.vel_y = 0
-        if keys[self.controls['left']]:
-            self.direction = -1
-            self.vel_x = -1 * self.speed * 60
-        if keys[self.controls['right']]:
-            self.direction = 1
-            self.vel_x = self.speed * 60
-        if keys[self.controls['up']]:
-            self.direction = -2
-            self.vel_y = -1 * self.speed * 60
-        if keys[self.controls['down']]:
-            self.direction = 2
-            self.vel_y = self.speed * 60
+        while 1:
+            if keys[self.controls['left']]:
+                self.direction = 1
+                self.vel_x = -1 * self.speed * 60
+                if keys[self.controls['up']]:
+                    self.direction = 2
+                    self.vel_y = -1 * self.speed * 60
+                if keys[self.controls['down']]:
+                    self.direction = 8
+                    self.vel_y = self.speed * 60
+                break
+            if keys[self.controls['right']]:
+                self.direction = 5
+                self.vel_x = self.speed * 60
+                if keys[self.controls['up']]:
+                    self.direction = 4
+                    self.vel_y = -1 * self.speed * 60
+                if keys[self.controls['down']]:
+                    self.direction = 6
+                    self.vel_y = self.speed * 60
+                break
+            if keys[self.controls['up']]:
+                self.direction = 3
+                self.vel_y = -1 * self.speed * 60
+            if keys[self.controls['down']]:
+                self.direction = 7
+                self.vel_y = self.speed * 60
+            break
     def update(self):
         self.key_input()
         self.x += self.vel_x * dt
@@ -149,22 +166,38 @@ class Projectile:
         self.x, self.y = x, y
         self.speed = 5 * 60
         self.vel_y, self.vel_x = 0, 0
-        if player.direction == 1:
-            self.vel_x = self.speed
-        elif player.direction == -1:
-            self.vel_x = self.speed * -1
-        if player.direction == -2:
-            self.vel_y = self.speed * -1
-        elif player.direction == 2:
-            self.vel_y = self.speed
-        self.color = color
         self.image_right = draw_projectile(color)
-        self.image_left = py.transform.rotate(self.image_right, 180)
-        self.image_down = py.transform.rotate(self.image_right, 270)
-        self.image_up = py.transform.rotate(self.image_right, 90)
-        self.rect = self.image_right.get_rect(center = (x, y))
-        image = self.image_right
-        self.mask = py.mask.from_surface(image)
+        if player.direction == 1:
+            self.vel_x = self.speed * -1
+            self.image = py.transform.rotate(self.image_right, 180)
+        elif player.direction == 2:
+            self.vel_x = self.speed * -1
+            self.vel_y = self.speed * -1
+            self.image = py.transform.rotate(self.image_right, 135)
+        elif player.direction == 3:
+            self.vel_y = self.speed * -1
+            self.image = py.transform.rotate(self.image_right, 90)
+        elif player.direction == 4:
+            self.vel_x = self.speed
+            self.vel_y = self.speed * -1
+            self.image = py.transform.rotate(self.image_right, 45)
+        elif player.direction == 5:
+            self.vel_x = self.speed
+            self.image = py.transform.rotate(self.image_right, 0)
+        elif player.direction == 6:
+            self.vel_x = self.speed * 1
+            self.vel_y = self.speed * 1
+            self.image = py.transform.rotate(self.image_right, 315)
+        elif player.direction == 7:
+            self.vel_y = self.speed
+            self.image = py.transform.rotate(self.image_right, 270)
+        elif player.direction == 8:
+            self.vel_x = self.speed * -1
+            self.vel_y = self.speed
+            self.image = py.transform.rotate(self.image_right, 225)
+        self.color = color
+        self.rect = self.image.get_rect(center = (x, y))
+        self.mask = py.mask.from_surface(self.image)
     def update(self):
         self.x += self.vel_x * dt
         self.y += self.vel_y * dt
@@ -177,22 +210,7 @@ class Projectile:
                 return False
         return True
     def draw(self, scroll_x, scroll_y):
-        image = self.image_right
-        if self.vel_x > 0:
-            if self.vel_y == 0:
-                image = self.image_right
-        elif self.vel_x < 0:
-            if self.vel_y == 0:
-                image = self.image_left
-        elif self.vel_x == 0:
-            if self.vel_y < 0:
-                image = self.image_up
-            elif self.vel_y > 0:
-                image = self.image_down
-            else:
-                image = self.image_right
-        self.mask = py.mask.from_surface(image)
-        screen.blit(image, (round(self.rect.x - scroll_x), round(self.rect.y - scroll_y)))
+        screen.blit(self.image, (round(self.rect.x - scroll_x), round(self.rect.y - scroll_y)))
 class Particle:
     def __init__(self, center_x, center_y, color):
         self.x = float(center_x)
